@@ -1,0 +1,30 @@
+
+# Automatically generated directories
+#======================================
+dep/
+build/
+coverage/
+bin/
+sbin/
+libexec/
+dist/
+external/
+lib/
+
+# Objects, Libraries and Binaries
+#==================================
+*.mo
+*.o
+*.a
+*.dll
+*.dylib
+*.so
+
+# Make auxiliars
+#=================
+make.debug
+doc/doxygen/
+doc/Doxyfile.mk
+*.d
+*.dep
+
