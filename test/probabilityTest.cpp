@@ -108,16 +108,16 @@ TEST(Probability, DiesIfInitializedWithValueBiggerThan1) {
 /*----------------------------------------------------------------------------*/
 
 TEST_F(AProbabilityZero, CanHaveInnerValueTypeAccessed) {
-  ASSERT_THAT(*zero.data(), Eq(-infinity));
+  ASSERT_THAT(zero.data(), Eq(-infinity));
 }
 
 TEST_F(AProbabilityZero, CanHaveInnerValueTypeAccessedInConstContext) {
   const probability_t& const_zero = zero;
-  ASSERT_THAT(*const_zero.data(), Eq(-infinity));
+  ASSERT_THAT(const_zero.data(), Eq(-infinity));
 }
 
 TEST_F(AProbabilityZero, HasInnerDataValueMinusInfinity) {
-  ASSERT_THAT(*zero.data(), Eq(-infinity));
+  ASSERT_THAT(zero.data(), Eq(-infinity));
 }
 
 TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByAProbability) {
@@ -187,7 +187,7 @@ TEST_F(AProbabilityZero, IsSmallerThanAnyNonZeroProbability) {
 /******/
 
 TEST_F(AProbabilityOne, HasInnerDataValueZero) {
-  ASSERT_THAT(DOUBLE(*one.data()), DoubleEq(0.0));
+  ASSERT_THAT(DOUBLE(one.data()), DoubleEq(0.0));
 }
 
 TEST_F(AProbabilityOne, GetsAProbabilityValueWhenMultipliedByAProbability) {

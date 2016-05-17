@@ -50,13 +50,13 @@ class Probability {
   }
 
   Probability& operator+=(const Probability& rhs) {
-    if (*rhs.data() == -infinity) {
+    if (rhs.data() == -infinity) {
       // Do nothing: summing with 0
     } else if (value == -infinity) {
-      value = *rhs.data();  // probability is 0: just attributes
+      value = rhs.data();  // probability is 0: just attributes
     } else {
-      const auto& max = std::max(value, *rhs.data());
-      const auto& min = std::min(value, *rhs.data());
+      const auto& max = std::max(value, rhs.data());
+      const auto& min = std::min(value, rhs.data());
       value = max + std::log1p(std::exp(min - max));
       check_range();
     }
@@ -65,15 +65,15 @@ class Probability {
 
   Probability& operator-=(const Probability& rhs) {
     // assert(value != -infinity);
-    if (*rhs.data() == -infinity) {
+    if (rhs.data() == -infinity) {
       // Do nothing: subtracting by 0
     } else if (value == -infinity) {
       // probability is 0: cannot be negative
       assert(false);  // LCOV_EXCL_LINE (not counted due to fork() in GTest)
     } else {
-      assert(value >= *rhs.data());
-      const auto& max = std::max(value, *rhs.data());
-      const auto& min = std::min(value, *rhs.data());
+      assert(value >= rhs.data());
+      const auto& max = std::max(value, rhs.data());
+      const auto& min = std::min(value, rhs.data());
       value = max + std::log1p(-std::exp(min - max));
       check_range();
     }
@@ -81,19 +81,19 @@ class Probability {
   }
 
   Probability& operator*=(const Probability& rhs) {
-    value += *rhs.data();
+    value += rhs.data();
     check_range();
     return *this;
   }
 
   Probability& operator/=(const Probability& rhs) {
-    value -= *rhs.data();
+    value -= rhs.data();
     check_range();
     return *this;
   }
 
   bool operator==(const Probability& rhs) const noexcept {
-    return value == *rhs.data();
+    return value == rhs.data();
   }
 
   bool operator!=(const Probability& rhs) const noexcept {
@@ -101,7 +101,7 @@ class Probability {
   }
 
   bool operator<(const Probability& rhs) const noexcept {
-    return value < *rhs.data();
+    return value < rhs.data();
   }
 
   bool operator<=(const Probability& rhs) const noexcept {
@@ -117,12 +117,12 @@ class Probability {
   }
 
   // Concrete methods
-  value_type* data() noexcept {
-    return &value;
+  value_type& data() noexcept {
+    return value;
   }
 
-  const value_type* data() const noexcept {
-    return &value;
+  const value_type& data() const noexcept {
+    return value;
   }
 
  private:
@@ -141,7 +141,7 @@ class Probability {
 // Operator overloads
 template<typename T>
 bool operator==(const double& lhs, const Probability<T>& rhs) noexcept {
-  return std::log(lhs) == *rhs.data();
+  return std::log(lhs) == rhs.data();
 }
 
 template<typename T>
@@ -151,7 +151,7 @@ bool operator!=(const double& lhs, const Probability<T>& rhs) noexcept {
 
 template<typename T>
 bool operator<(const double& lhs, const Probability<T>& rhs) noexcept {
-  return std::log(lhs) < *rhs.data();
+  return std::log(lhs) < rhs.data();
 }
 
 template<typename T>
@@ -173,7 +173,7 @@ bool operator>=(const double& lhs, const Probability<T>& rhs) noexcept {
 
 template<typename T>
 bool operator==(const Probability<T>& lhs, const double& rhs) noexcept {
-  return *lhs.data() == std::log(rhs);
+  return lhs.data() == std::log(rhs);
 }
 
 template<typename T>
@@ -183,7 +183,7 @@ bool operator!=(const Probability<T>& lhs, const double& rhs) noexcept {
 
 template<typename T>
 bool operator<(const Probability<T>& lhs, const double& rhs) noexcept {
-  return *lhs.data() < std::log(rhs);
+  return lhs.data() < std::log(rhs);
 }
 
 template<typename T>
