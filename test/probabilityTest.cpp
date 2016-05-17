@@ -147,9 +147,8 @@ TEST_F(AProbabilityZero, KeepsItsValueWhenDividedByADouble) {
   ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
 }
 
-TEST_F(AProbabilityZero, BecomesNaNWhenDividedByItself) {
-  zero /= zero;
-  ASSERT_TRUE(std::isnan(zero));
+TEST_F(AProbabilityZero, DiesWhenDividedByItself) {
+  ASSERT_DEATH(zero /= zero, "");
 }
 
 TEST_F(AProbabilityZero, CanBeIncreasedByZero) {

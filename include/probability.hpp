@@ -125,7 +125,7 @@ class probability_t {
 
   // Concrete methods
   void check_range() {
-    assert(value <= 0 || std::isnan(value));
+    assert(value <= 0);
   }
 };
 
