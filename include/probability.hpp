@@ -26,12 +26,21 @@
 
 namespace probability {
 
-class probability_t {
+// Forward declaration
+template<typename T> class Probability;
+
+// Aliases
+using float_probability_t = Probability<float>;
+using double_probability_t = Probability<double>;
+using probability_t = double_probability_t;
+
+template<typename T>
+class Probability {
  public:
-  using value_type = double;
+  using value_type = T;
 
   // Constructors
-  probability_t(value_type v = 0.0) : value(std::log(v)) {
+  Probability(value_type v = 0.0) : value(std::log(v)) {
     assert(v >= 0.0 && v <= 1.0);
   }
 
@@ -40,7 +49,7 @@ class probability_t {
     return std::exp(value);
   }
 
-  probability_t& operator+=(const probability_t& rhs) {
+  Probability& operator+=(const Probability& rhs) {
     if (*rhs.data() == -infinity) {
       // Do nothing: summing with 0
     } else if (value == -infinity) {
@@ -54,7 +63,7 @@ class probability_t {
     return *this;
   }
 
-  probability_t& operator-=(const probability_t& rhs) {
+  Probability& operator-=(const Probability& rhs) {
     // assert(value != -infinity);
     if (*rhs.data() == -infinity) {
       // Do nothing: subtracting by 0
@@ -71,39 +80,39 @@ class probability_t {
     return *this;
   }
 
-  probability_t& operator*=(const probability_t& rhs) {
+  Probability& operator*=(const Probability& rhs) {
     value += *rhs.data();
     check_range();
     return *this;
   }
 
-  probability_t& operator/=(const probability_t& rhs) {
+  Probability& operator/=(const Probability& rhs) {
     value -= *rhs.data();
     check_range();
     return *this;
   }
 
-  bool operator==(const probability_t& rhs) const noexcept {
+  bool operator==(const Probability& rhs) const noexcept {
     return value == *rhs.data();
   }
 
-  bool operator!=(const probability_t& rhs) const noexcept {
+  bool operator!=(const Probability& rhs) const noexcept {
     return !operator==(rhs);
   }
 
-  bool operator<(const probability_t& rhs) const noexcept {
+  bool operator<(const Probability& rhs) const noexcept {
     return value < *rhs.data();
   }
 
-  bool operator<=(const probability_t& rhs) const noexcept {
+  bool operator<=(const Probability& rhs) const noexcept {
     return operator<(rhs) || operator==(rhs);
   }
 
-  bool operator>(const probability_t& rhs) const noexcept {
+  bool operator>(const Probability& rhs) const noexcept {
     return !operator<=(rhs);
   }
 
-  bool operator>=(const probability_t& rhs) const noexcept {
+  bool operator>=(const Probability& rhs) const noexcept {
     return !operator<(rhs);
   }
 
@@ -130,116 +139,140 @@ class probability_t {
 };
 
 // Operator overloads
-bool operator==(const double& lhs, const probability_t& rhs) noexcept {
+template<typename T>
+bool operator==(const double& lhs, const Probability<T>& rhs) noexcept {
   return std::log(lhs) == *rhs.data();
 }
 
-bool operator!=(const double& lhs, const probability_t& rhs) noexcept {
+template<typename T>
+bool operator!=(const double& lhs, const Probability<T>& rhs) noexcept {
   return !operator==(lhs, rhs);
 }
 
-bool operator<(const double& lhs, const probability_t& rhs) noexcept {
+template<typename T>
+bool operator<(const double& lhs, const Probability<T>& rhs) noexcept {
   return std::log(lhs) < *rhs.data();
 }
 
-bool operator<=(const double& lhs, const probability_t& rhs) noexcept {
+template<typename T>
+bool operator<=(const double& lhs, const Probability<T>& rhs) noexcept {
   return operator<(lhs, rhs) || operator==(lhs, rhs);
 }
 
-bool operator>(const double& lhs, const probability_t& rhs) noexcept {
+template<typename T>
+bool operator>(const double& lhs, const Probability<T>& rhs) noexcept {
   return !operator<=(lhs, rhs);
 }
 
-bool operator>=(const double& lhs, const probability_t& rhs) noexcept {
+template<typename T>
+bool operator>=(const double& lhs, const Probability<T>& rhs) noexcept {
   return !operator<(lhs, rhs);
 }
 
 /**/
 
-bool operator==(const probability_t& lhs, const double& rhs) noexcept {
+template<typename T>
+bool operator==(const Probability<T>& lhs, const double& rhs) noexcept {
   return *lhs.data() == std::log(rhs);
 }
 
-bool operator!=(const probability_t& lhs, const double& rhs) noexcept {
+template<typename T>
+bool operator!=(const Probability<T>& lhs, const double& rhs) noexcept {
   return !operator==(lhs, rhs);
 }
 
-bool operator<(const probability_t& lhs, const double& rhs) noexcept {
+template<typename T>
+bool operator<(const Probability<T>& lhs, const double& rhs) noexcept {
   return *lhs.data() < std::log(rhs);
 }
 
-bool operator<=(const probability_t& lhs, const double& rhs) noexcept {
+template<typename T>
+bool operator<=(const Probability<T>& lhs, const double& rhs) noexcept {
   return operator<(lhs, rhs) || operator==(lhs, rhs);
 }
 
-bool operator>(const probability_t& lhs, const double& rhs) noexcept {
+template<typename T>
+bool operator>(const Probability<T>& lhs, const double& rhs) noexcept {
   return !operator<=(lhs, rhs);
 }
 
-bool operator>=(const probability_t& lhs, const double& rhs) noexcept {
+template<typename T>
+bool operator>=(const Probability<T>& lhs, const double& rhs) noexcept {
   return !operator<(lhs, rhs);
 }
 
 /**/
 
-probability_t operator*(probability_t lhs, const probability_t& rhs) {
+template<typename T>
+Probability<T> operator*(Probability<T> lhs, const Probability<T>& rhs) {
   lhs *= rhs;
   return lhs;
 }
 
-probability_t operator*(const probability_t& lhs, const double& rhs) {
+template<typename T>
+Probability<T> operator*(const Probability<T>& lhs, const double& rhs) {
   return { static_cast<double>(lhs) * static_cast<double>(rhs) };
 }
 
-probability_t operator*(const double& lhs, const probability_t& rhs) {
+template<typename T>
+Probability<T> operator*(const double& lhs, const Probability<T>& rhs) {
   return { static_cast<double>(lhs) * static_cast<double>(rhs) };
 }
 
 /**/
 
-probability_t operator/(probability_t lhs, const probability_t& rhs) {
+template<typename T>
+Probability<T> operator/(Probability<T> lhs, const Probability<T>& rhs) {
   lhs /= rhs;
   return lhs;
 }
 
-probability_t operator/(const probability_t& lhs, const double& rhs) {
+template<typename T>
+Probability<T> operator/(const Probability<T>& lhs, const double& rhs) {
   return { static_cast<double>(lhs) / static_cast<double>(rhs) };
 }
 
-probability_t operator/(const double& lhs, const probability_t& rhs) {
+template<typename T>
+Probability<T> operator/(const double& lhs, const Probability<T>& rhs) {
   return { static_cast<double>(lhs) / static_cast<double>(rhs) };
 }
 
 /**/
 
-probability_t operator+(probability_t lhs, const probability_t& rhs) {
+template<typename T>
+Probability<T> operator+(Probability<T> lhs, const Probability<T>& rhs) {
   lhs += rhs;
   return lhs;
 }
 
-probability_t operator+(probability_t lhs, const double& rhs) {
-  return operator+(lhs, probability_t(rhs));
+template<typename T>
+Probability<T> operator+(Probability<T> lhs, const double& rhs) {
+  return operator+(lhs, Probability<T>(rhs));
 }
 
-probability_t operator+(const double& lhs, const probability_t& rhs) {
-  probability_t result(lhs);
+template<typename T>
+Probability<T> operator+(const double& lhs, const Probability<T>& rhs) {
+  Probability<T> result(lhs);
   result += rhs;
   return result;
 }
 
 /**/
 
-probability_t operator-(probability_t lhs, const probability_t& rhs) {
+template<typename T>
+Probability<T> operator-(Probability<T> lhs, const Probability<T>& rhs) {
   lhs -= rhs;
   return lhs;
 }
 
-probability_t operator-(probability_t lhs, const double& rhs) {
-  return operator-(lhs, probability_t(rhs));
+template<typename T>
+Probability<T> operator-(Probability<T> lhs, const double& rhs) {
+  return operator-(lhs, Probability<T>(rhs));
 }
 
-probability_t operator-(const double& lhs, const probability_t& rhs) {
-  probability_t result(lhs);
+template<typename T>
+Probability<T> operator-(const double& lhs, const Probability<T>& rhs) {
+  Probability<T> result(lhs);
   result -= rhs;
   return result;
 }
