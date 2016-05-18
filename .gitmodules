@@ -8,3 +8,7 @@
 	url = https://github.com/google/googletest.git
 	ignore = dirty
 	ignore = dirty
+[submodule "external/gbenchmark"]
+	path = external/gbenchmark
+	url = https://github.com/google/benchmark.git
+	ignore = dirty
