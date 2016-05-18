@@ -52,7 +52,7 @@ class Probability {
     return std::exp(value);
   }
 
-  Probability& operator+=(const Probability& rhs) {
+  Probability& operator+=(const Probability& rhs) noexcept {
     if (rhs.data() == -infinity) {
       // Do nothing: summing with 0
     } else if (value == -infinity) {
@@ -66,7 +66,7 @@ class Probability {
     return *this;
   }
 
-  Probability& operator-=(const Probability& rhs) {
+  Probability& operator-=(const Probability& rhs) noexcept {
     // assert(value != -infinity);
     if (rhs.data() == -infinity) {
       // Do nothing: subtracting by 0
@@ -83,13 +83,13 @@ class Probability {
     return *this;
   }
 
-  Probability& operator*=(const Probability& rhs) {
+  Probability& operator*=(const Probability& rhs) noexcept {
     value += rhs.data();
     check_range();
     return *this;
   }
 
-  Probability& operator/=(const Probability& rhs) {
+  Probability& operator/=(const Probability& rhs) noexcept {
     value -= rhs.data();
     check_range();
     return *this;
