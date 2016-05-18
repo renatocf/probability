@@ -57,10 +57,11 @@ class Probability {
       // Do nothing: summing with 0
     } else if (value == -infinity) {
       value = rhs.data();  // probability is 0: just attributes
+    } else if (value >= rhs.data()) {
+      value += std::log1p(std::exp(rhs.data() - value));
+      check_range();
     } else {
-      const auto& max = std::max(value, rhs.data());
-      const auto& min = std::min(value, rhs.data());
-      value = max + std::log1p(std::exp(min - max));
+      value = rhs.data() + std::log1p(std::exp(value - rhs.data()));
       check_range();
     }
     return *this;
@@ -75,9 +76,7 @@ class Probability {
       assert(false);  // LCOV_EXCL_LINE (not counted due to fork() in GTest)
     } else {
       assert(value >= rhs.data());
-      const auto& max = std::max(value, rhs.data());
-      const auto& min = std::min(value, rhs.data());
-      value = max + std::log1p(-std::exp(min - max));
+      value += std::log1p(-std::exp(rhs.data() - value));
       check_range();
     }
     return *this;
