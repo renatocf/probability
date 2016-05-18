@@ -41,7 +41,9 @@ class Probability {
   using value_type = T;
 
   // Constructors
-  Probability(value_type v = 0.0) : value(std::log(v)) {
+  Probability() = default;
+
+  Probability(value_type v) : value(std::log(v)) {
     assert(v >= 0.0 && v <= 1.0);
   }
 
