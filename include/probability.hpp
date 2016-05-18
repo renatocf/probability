@@ -23,6 +23,7 @@
 #include <limits>
 #include <cassert>
 #include <algorithm>
+#include <cmath>
 
 namespace probability {
 
