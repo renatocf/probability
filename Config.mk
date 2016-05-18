@@ -16,6 +16,10 @@ SYNOPSIS        := A fast implementation of probabilities
 DESCRIPTION     := A fast implementation of probabilities, \
                    using log space
 
+# Program settings
+# ==================
+BENCHBIN        := bench
+
 # Flags
 # =======
 CPPFLAGS        := # Precompiler Flags
@@ -25,3 +29,4 @@ LDFLAGS         := # Linker flags
 # Makeball list
 # ===============
 include conf/googletest.mk
+include conf/googlebenchmark.mk
