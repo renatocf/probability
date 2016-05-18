@@ -133,7 +133,7 @@ class Probability {
   static constexpr auto infinity = std::numeric_limits<value_type>::infinity();
 
   // Instance variables
-  value_type value = 0.0;
+  value_type value = -infinity;
 
   // Concrete methods
   void check_range() {
