@@ -23,7 +23,7 @@
 #include "gmock/gmock.h"
 
 // Tested header
-#include "probability.hpp"
+#include "probability/probability.hpp"
 
 /*----------------------------------------------------------------------------*/
 /*                             USING DECLARATIONS                             */

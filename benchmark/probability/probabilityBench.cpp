@@ -24,7 +24,7 @@
 #include "benchmark/benchmark.h"
 
 // Probability header
-#include "probability.hpp"
+#include "probability/probability.hpp"
 
 double log_sum(double log_a, double log_b) {
   if (log_a > log_b) {
