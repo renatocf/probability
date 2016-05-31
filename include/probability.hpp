@@ -35,6 +35,10 @@ using float_probability_t = Probability<float>;
 using double_probability_t = Probability<double>;
 using probability_t = double_probability_t;
 
+/**
+ * @class Probability
+ * @brief Fast implementation of probabilities using logarithms
+ */
 template<typename T, unsigned int ulp>
 class Probability {
  public:
