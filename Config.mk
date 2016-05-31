@@ -13,8 +13,7 @@ MAINTEINER_NAME := Renato Cordeiro Ferreira
 MAINTEINER_MAIL := renato.cferreira@hotmail.com
 COPYRIGHT       := Renato Cordeiro Ferreira
 SYNOPSIS        := A fast implementation of probabilities
-DESCRIPTION     := A fast implementation of probabilities, \
-                   using log space
+DESCRIPTION     := A fast implementation of probabilities using logarithms
 
 # Program settings
 # ==================

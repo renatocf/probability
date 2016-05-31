@@ -1,5 +1,5 @@
 /******************************************************************************/
-/*  Probability - A fast implementation of probabilities with log space       */
+/*  Probability - A fast implementation of probabilities using logarithms     */
 /*  Copyright (C) 2016 Renato Cordeiro Ferreira                               */
 /*                                                                            */
 /*  This program is free software: you can redistribute it and/or modify      */
