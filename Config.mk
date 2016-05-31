@@ -7,7 +7,7 @@
 # ===============
 PROJECT         := Probability
 VERSION         := 0.0.1
-STD_NAMESPACE   := probability
+STD_NAMESPACE   := # probability
 GIT_REMOTE_PATH := # Remote path for git repository
 MAINTEINER_NAME := Renato Cordeiro Ferreira
 MAINTEINER_MAIL := renato.cferreira@hotmail.com
