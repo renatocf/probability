@@ -151,128 +151,128 @@ class Probability {
 
 // Operator overloads
 template<typename T, unsigned int ulp>
-inline bool operator==(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline bool operator==(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return std::log(lhs) == rhs.data();
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator!=(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline bool operator!=(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return !operator==(lhs, rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator<(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline bool operator<(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return std::log(lhs) < rhs.data();
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator<=(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline bool operator<=(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return operator<(lhs, rhs) || operator==(lhs, rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator>(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline bool operator>(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return !operator<=(lhs, rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator>=(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline bool operator>=(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return !operator<(lhs, rhs);
 }
 
 /**/
 
 template<typename T, unsigned int ulp>
-inline bool operator==(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline bool operator==(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return lhs.data() == std::log(rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator!=(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline bool operator!=(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return !operator==(lhs, rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator<(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline bool operator<(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return lhs.data() < std::log(rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator<=(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline bool operator<=(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return operator<(lhs, rhs) || operator==(lhs, rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator>(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline bool operator>(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return !operator<=(lhs, rhs);
 }
 
 template<typename T, unsigned int ulp>
-inline bool operator>=(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline bool operator>=(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return !operator<(lhs, rhs);
 }
 
 /**/
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator*(Probability<T,ulp> lhs, const Probability<T,ulp>& rhs) noexcept {
+inline Probability<T, ulp>
+operator*(Probability<T, ulp> lhs, const Probability<T, ulp>& rhs) noexcept {
   lhs *= rhs;
   return lhs;
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator*(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline Probability<T, ulp>
+operator*(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return { static_cast<T>(lhs) * static_cast<T>(rhs) };
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator*(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline Probability<T, ulp>
+operator*(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return { static_cast<T>(lhs) * static_cast<T>(rhs) };
 }
 
 /**/
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator/(Probability<T,ulp> lhs, const Probability<T,ulp>& rhs) noexcept {
+inline Probability<T, ulp>
+operator/(Probability<T, ulp> lhs, const Probability<T, ulp>& rhs) noexcept {
   lhs /= rhs;
   return lhs;
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator/(const Probability<T,ulp>& lhs, const T& rhs) noexcept {
+inline Probability<T, ulp>
+operator/(const Probability<T, ulp>& lhs, const T& rhs) noexcept {
   return { static_cast<T>(lhs) / static_cast<T>(rhs) };
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator/(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
+inline Probability<T, ulp>
+operator/(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
   return { static_cast<T>(lhs) / static_cast<T>(rhs) };
 }
 
 /**/
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator+(Probability<T,ulp> lhs, const Probability<T,ulp>& rhs) noexcept {
+inline Probability<T, ulp>
+operator+(Probability<T, ulp> lhs, const Probability<T, ulp>& rhs) noexcept {
   lhs += rhs;
   return lhs;
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator+(Probability<T,ulp> lhs, const T& rhs) noexcept {
-  return operator+(lhs, Probability<T,ulp>(rhs));
+inline Probability<T, ulp>
+operator+(Probability<T, ulp> lhs, const T& rhs) noexcept {
+  return operator+(lhs, Probability<T, ulp>(rhs));
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator+(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
-  Probability<T,ulp> result(lhs);
+inline Probability<T, ulp>
+operator+(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
+  Probability<T, ulp> result(lhs);
   result += rhs;
   return result;
 }
@@ -280,22 +280,22 @@ operator+(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
 /**/
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator-(Probability<T,ulp> lhs, const Probability<T,ulp>& rhs) noexcept {
+inline Probability<T, ulp>
+operator-(Probability<T, ulp> lhs, const Probability<T, ulp>& rhs) noexcept {
   lhs -= rhs;
   return lhs;
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator-(Probability<T,ulp> lhs, const T& rhs) noexcept {
-  return operator-(lhs, Probability<T,ulp>(rhs));
+inline Probability<T, ulp>
+operator-(Probability<T, ulp> lhs, const T& rhs) noexcept {
+  return operator-(lhs, Probability<T, ulp>(rhs));
 }
 
 template<typename T, unsigned int ulp>
-inline Probability<T,ulp>
-operator-(const T& lhs, const Probability<T,ulp>& rhs) noexcept {
-  Probability<T,ulp> result(lhs);
+inline Probability<T, ulp>
+operator-(const T& lhs, const Probability<T, ulp>& rhs) noexcept {
+  Probability<T, ulp> result(lhs);
   result -= rhs;
   return result;
 }
