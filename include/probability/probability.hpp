@@ -72,7 +72,6 @@ class Probability {
   }
 
   Probability& operator-=(const Probability& rhs) noexcept {
-    // assert(value != -infinity);
     if (rhs.data() == -infinity) {
       // Do nothing: subtracting by 0
     } else if (value == -infinity) {
