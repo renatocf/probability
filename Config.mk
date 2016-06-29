@@ -15,10 +15,6 @@ COPYRIGHT       := Renato Cordeiro Ferreira
 SYNOPSIS        := A fast implementation of probabilities
 DESCRIPTION     := A fast implementation of probabilities using logarithms
 
-# Program settings
-# ==================
-BENCHBIN        := bench
-
 # Flags
 # =======
 CPPFLAGS        := # Precompiler Flags
