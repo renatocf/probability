@@ -1,12 +1,10 @@
 [submodule "make"]
 	path = make
-	url = https://github.com/umakefile/make.git
-	ignore = dirty
+	url = https://github.com/umake/make.git
 	ignore = dirty
 [submodule "external/gtest"]
 	path = external/gtest
 	url = https://github.com/google/googletest.git
-	ignore = dirty
 	ignore = dirty
 [submodule "external/gbenchmark"]
 	path = external/gbenchmark
