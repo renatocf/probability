@@ -28,12 +28,16 @@
 namespace probability {
 
 // Forward declaration
-template<typename T, std::size_t ulp = 0> class LogFloatingPoint;
+template<typename T, std::size_t ulp, typename C> class LogFloatingPoint;
+template<typename T, std::size_t ulp> class ProbabilityChecker;
 
 // Aliases
-using probability_float_t = LogFloatingPoint<float>;
-using probability_double_t = LogFloatingPoint<double>;
-using probability_long_double_t = LogFloatingPoint<long double>;
+template<typename T, std::size_t ulp = 0>
+using Probability = LogFloatingPoint<T, ulp, ProbabilityChecker<T, ulp>>;
+
+using probability_float_t = Probability<float>;
+using probability_double_t = Probability<double>;
+using probability_long_double_t = Probability<long double>;
 
 using probability_t = probability_double_t;
 
@@ -41,10 +45,11 @@ using probability_t = probability_double_t;
  * @class LogFloatingPoint
  * @brief Fast implementation of floats using logarithms
  */
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 class LogFloatingPoint {
  public:
   using value_type = T;
+  using checker_type = C;
 
   // Constructors
   LogFloatingPoint() = default;
@@ -143,188 +148,210 @@ class LogFloatingPoint {
   static constexpr auto infinity
     = std::numeric_limits<value_type>::infinity();
 
-  static constexpr auto limit
-    = std::numeric_limits<value_type>::epsilon() * (1 << ulp);
-
   // Instance variables
   value_type value = -infinity;
 
   // Concrete methods
   void check_initial_value(value_type v) {
-    assert(v <= 1.0);
+    checker_type::check_initial_value(v);
   }
 
   void check_range() {
-    assert(value <= limit);
+    checker_type::check_range(value);
   }
 };
 
 // Operator overloads
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 inline bool operator==(const T& lhs,
-                       const LogFloatingPoint<T, ulp>& rhs) noexcept {
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return std::log(lhs) == rhs.data();
 }
 
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 inline bool operator!=(const T& lhs,
-                       const LogFloatingPoint<T, ulp>& rhs) noexcept {
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return !operator==(lhs, rhs);
 }
 
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 inline bool operator<(const T& lhs,
-                      const LogFloatingPoint<T, ulp>& rhs) noexcept {
+                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return std::log(lhs) < rhs.data();
 }
 
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 inline bool operator<=(const T& lhs,
-                       const LogFloatingPoint<T, ulp>& rhs) noexcept {
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return operator<(lhs, rhs) || operator==(lhs, rhs);
 }
 
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 inline bool operator>(const T& lhs,
-                      const LogFloatingPoint<T, ulp>& rhs) noexcept {
+                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return !operator<=(lhs, rhs);
 }
 
-template<typename T, std::size_t ulp>
+template<typename T, std::size_t ulp, typename C>
 inline bool operator>=(const T& lhs,
-                       const LogFloatingPoint<T, ulp>& rhs) noexcept {
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return !operator<(lhs, rhs);
 }
 
 /**/
 
-template<typename T, std::size_t ulp>
-inline bool operator==(const LogFloatingPoint<T, ulp>& lhs,
+template<typename T, std::size_t ulp, typename C>
+inline bool operator==(const LogFloatingPoint<T, ulp, C>& lhs,
                        const T& rhs) noexcept {
   return lhs.data() == std::log(rhs);
 }
 
-template<typename T, std::size_t ulp>
-inline bool operator!=(const LogFloatingPoint<T, ulp>& lhs,
+template<typename T, std::size_t ulp, typename C>
+inline bool operator!=(const LogFloatingPoint<T, ulp, C>& lhs,
                        const T& rhs) noexcept {
   return !operator==(lhs, rhs);
 }
 
-template<typename T, std::size_t ulp>
-inline bool operator<(const LogFloatingPoint<T, ulp>& lhs,
+template<typename T, std::size_t ulp, typename C>
+inline bool operator<(const LogFloatingPoint<T, ulp, C>& lhs,
                       const T& rhs) noexcept {
   return lhs.data() < std::log(rhs);
 }
 
-template<typename T, std::size_t ulp>
-inline bool operator<=(const LogFloatingPoint<T, ulp>& lhs,
+template<typename T, std::size_t ulp, typename C>
+inline bool operator<=(const LogFloatingPoint<T, ulp, C>& lhs,
                        const T& rhs) noexcept {
   return operator<(lhs, rhs) || operator==(lhs, rhs);
 }
 
-template<typename T, std::size_t ulp>
-inline bool operator>(const LogFloatingPoint<T, ulp>& lhs,
+template<typename T, std::size_t ulp, typename C>
+inline bool operator>(const LogFloatingPoint<T, ulp, C>& lhs,
                       const T& rhs) noexcept {
   return !operator<=(lhs, rhs);
 }
 
-template<typename T, std::size_t ulp>
-inline bool operator>=(const LogFloatingPoint<T, ulp>& lhs,
+template<typename T, std::size_t ulp, typename C>
+inline bool operator>=(const LogFloatingPoint<T, ulp, C>& lhs,
                        const T& rhs) noexcept {
   return !operator<(lhs, rhs);
 }
 
 /**/
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator*(LogFloatingPoint<T, ulp> lhs,
-          const LogFloatingPoint<T, ulp>& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator*(LogFloatingPoint<T, ulp, C> lhs,
+          const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   lhs *= rhs;
   return lhs;
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator*(const LogFloatingPoint<T, ulp>& lhs, const T& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator*(const LogFloatingPoint<T, ulp, C>& lhs, const T& rhs) noexcept {
   return { static_cast<T>(lhs) * static_cast<T>(rhs) };
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator*(const T& lhs, const LogFloatingPoint<T, ulp>& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator*(const T& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return { static_cast<T>(lhs) * static_cast<T>(rhs) };
 }
 
 /**/
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator/(LogFloatingPoint<T, ulp> lhs,
-          const LogFloatingPoint<T, ulp>& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator/(LogFloatingPoint<T, ulp, C> lhs,
+          const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   lhs /= rhs;
   return lhs;
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator/(const LogFloatingPoint<T, ulp>& lhs, const T& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator/(const LogFloatingPoint<T, ulp, C>& lhs, const T& rhs) noexcept {
   return { static_cast<T>(lhs) / static_cast<T>(rhs) };
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator/(const T& lhs, const LogFloatingPoint<T, ulp>& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator/(const T& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return { static_cast<T>(lhs) / static_cast<T>(rhs) };
 }
 
 /**/
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator+(LogFloatingPoint<T, ulp> lhs,
-          const LogFloatingPoint<T, ulp>& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator+(LogFloatingPoint<T, ulp, C> lhs,
+          const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   lhs += rhs;
   return lhs;
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator+(LogFloatingPoint<T, ulp> lhs, const T& rhs) noexcept {
-  return operator+(lhs, LogFloatingPoint<T, ulp>(rhs));
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator+(LogFloatingPoint<T, ulp, C> lhs, const T& rhs) noexcept {
+  return operator+(lhs, LogFloatingPoint<T, ulp, C>(rhs));
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator+(const T& lhs, const LogFloatingPoint<T, ulp>& rhs) noexcept {
-  LogFloatingPoint<T, ulp> result(lhs);
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator+(const T& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  LogFloatingPoint<T, ulp, C> result(lhs);
   result += rhs;
   return result;
 }
 
 /**/
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator-(LogFloatingPoint<T, ulp> lhs,
-          const LogFloatingPoint<T, ulp>& rhs) noexcept {
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator-(LogFloatingPoint<T, ulp, C> lhs,
+          const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   lhs -= rhs;
   return lhs;
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator-(LogFloatingPoint<T, ulp> lhs, const T& rhs) noexcept {
-  return operator-(lhs, LogFloatingPoint<T, ulp>(rhs));
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator-(LogFloatingPoint<T, ulp, C> lhs, const T& rhs) noexcept {
+  return operator-(lhs, LogFloatingPoint<T, ulp, C>(rhs));
 }
 
-template<typename T, std::size_t ulp>
-inline LogFloatingPoint<T, ulp>
-operator-(const T& lhs, const LogFloatingPoint<T, ulp>& rhs) noexcept {
-  LogFloatingPoint<T, ulp> result(lhs);
+template<typename T, std::size_t ulp, typename C>
+inline LogFloatingPoint<T, ulp, C>
+operator-(const T& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  LogFloatingPoint<T, ulp, C> result(lhs);
   result -= rhs;
   return result;
 }
+
+/**
+ * @class ProbabilityChecker
+ * @brief Requires values in LogFloatingPoint to be probabilities
+ */
+template<typename T, std::size_t ulp>
+class ProbabilityChecker {
+ public:
+  // Aliases
+  using value_type = T;
+
+  // Concrete methods
+  static void check_initial_value(value_type v) {
+    assert(v <= 1.0);
+  }
+
+  static void check_range(value_type value) {
+    assert(value <= limit);
+  }
+
+ private:
+  // Static variables
+  static constexpr auto limit
+    = std::numeric_limits<value_type>::epsilon() * (1 << ulp);
+};
 
 }  // namespace probability
 
