@@ -37,7 +37,7 @@ double log_sum(double log_a, double log_b) {
 static void BM_ForwardAlgorithmWithoutProbability(benchmark::State& state) {
   while (state.KeepRunning()) {
     auto state_alphabet_size = 10;
-    auto sequence_size = state.range_x();
+    auto sequence_size = state.range(0);
 
     auto alpha = std::vector<std::vector<double>>(
         state_alphabet_size,
@@ -66,12 +66,12 @@ static void BM_ForwardAlgorithmWithoutProbability(benchmark::State& state) {
     }
   }
 }
-BENCHMARK(BM_ForwardAlgorithmWithoutProbability)->Range(1024, 4*1024*1024);
+BENCHMARK(BM_ForwardAlgorithmWithoutProbability)->Range(1 << 10, 1 << 22);
 
 static void BM_ForwardAlgorithmWithProbability(benchmark::State& state) {
   while (state.KeepRunning()) {
     auto state_alphabet_size = 10;
-    auto sequence_size = state.range_x();
+    auto sequence_size = state.range(0);
 
     auto alpha = std::vector<std::vector<probability::probability_t>>(
         state_alphabet_size,
@@ -98,4 +98,4 @@ static void BM_ForwardAlgorithmWithProbability(benchmark::State& state) {
     }
   }
 }
-BENCHMARK(BM_ForwardAlgorithmWithProbability)->Range(1024, 4*1024*1024);
+BENCHMARK(BM_ForwardAlgorithmWithProbability)->Range(1 << 10, 1 << 22);
