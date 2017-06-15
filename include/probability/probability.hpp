@@ -48,7 +48,8 @@ class LogFloatingPoint {
   LogFloatingPoint() = default;
 
   LogFloatingPoint(value_type v) : value(std::log(v)) {
-    assert(v >= 0.0 && v <= 1.0);
+    assert(v >= 0.0);
+    check_initial_value(v);
   }
 
   // Operator overloads
@@ -147,6 +148,10 @@ class LogFloatingPoint {
   value_type value = -infinity;
 
   // Concrete methods
+  void check_initial_value(value_type v) {
+    assert(v <= 1.0);
+  }
+
   void check_range() {
     assert(value <= limit);
   }
