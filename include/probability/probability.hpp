@@ -28,10 +28,17 @@
 namespace probability {
 
 // Forward declaration
-template<typename T, std::size_t ulp, typename C> class LogFloatingPoint;
+template<typename T> class EmptyChecker;
 template<typename T, std::size_t ulp> class ProbabilityChecker;
 
+template<typename T, std::size_t ulp = 0, typename C = EmptyChecker<T>>
+class LogFloatingPoint;
+
 // Aliases
+using log_float_t = LogFloatingPoint<float>;
+using log_double_t = LogFloatingPoint<double>;
+using log_long_double_t = LogFloatingPoint<long double>;
+
 template<typename T, std::size_t ulp = 0>
 using Probability = LogFloatingPoint<T, ulp, ProbabilityChecker<T, ulp>>;
 
@@ -327,6 +334,24 @@ operator-(const T& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   result -= rhs;
   return result;
 }
+
+/**
+ * @class EmptyChecker
+ * @brief Imposes no restrictions on values in LogFloatingPoint
+ */
+template<typename T>
+class EmptyChecker {
+ public:
+  // Aliases
+  using value_type = T;
+
+  // Concrete methods
+  static void check_initial_value(value_type /* v */) {
+  }
+
+  static void check_range(value_type /* value */) {
+  }
+};
 
 /**
  * @class ProbabilityChecker
