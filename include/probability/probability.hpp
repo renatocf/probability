@@ -31,9 +31,11 @@ namespace probability {
 template<typename T, std::size_t ulp = 0> class LogFloatingPoint;
 
 // Aliases
-using float_probability_t = LogFloatingPoint<float>;
-using double_probability_t = LogFloatingPoint<double>;
-using probability_t = double_probability_t;
+using probability_float_t = LogFloatingPoint<float>;
+using probability_double_t = LogFloatingPoint<double>;
+using probability_long_double_t = LogFloatingPoint<long double>;
+
+using probability_t = probability_double_t;
 
 /**
  * @class LogFloatingPoint
