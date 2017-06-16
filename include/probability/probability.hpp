@@ -54,6 +54,9 @@ using probability_t = probability_double_t;
 
 /**
  * @class LogFloatingPoint
+ * @tparam T Value type, used for internal store
+ * @tparam ulp Units in the last place, defining the accuracy
+ * @tparam C Checker type, used to inject methods that verify consistency
  * @brief Fast implementation of floats using logarithms
  */
 template<typename T, std::size_t ulp, typename C>
