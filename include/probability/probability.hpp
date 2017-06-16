@@ -25,6 +25,10 @@
 #include <cassert>
 #include <algorithm>
 
+// Macros
+// Based on http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
+#define UNUSED(x) do { (void) sizeof(x); } while (false)
+
 namespace probability {
 
 // Forward declaration
@@ -366,10 +370,12 @@ class ProbabilityChecker {
   // Concrete methods
   static void check_initial_value(value_type v) {
     assert(v <= 1.0);
+    UNUSED(v);  // Avoid 'unused variable' warning when 'assert' is disabled
   }
 
   static void check_range(value_type value) {
     assert(value <= limit);
+    UNUSED(value);  // Avoid 'unused variable' warning when 'assert' is disabled
   }
 
  private:
@@ -379,5 +385,8 @@ class ProbabilityChecker {
 };
 
 }  // namespace probability
+
+// Macros
+#undef UNUSED
 
 #endif  // PROBABILITY_PROBABILITY_
