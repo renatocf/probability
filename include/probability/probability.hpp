@@ -73,6 +73,12 @@ class LogFloatingPoint {
     check_initial_value(v);
   }
 
+  template<typename RhsT, std::size_t RhsUlp, typename RhsC>
+  LogFloatingPoint(const LogFloatingPoint<RhsT, RhsUlp, RhsC>& v)
+      : value(v.data()) {
+    check_range();
+  }
+
   // Operator overloads
   operator value_type() const noexcept {
     return std::exp(value);
