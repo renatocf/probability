@@ -18,7 +18,7 @@ DESCRIPTION     := A fast implementation of probabilities using logarithms
 # Flags
 # =======
 CPPFLAGS        := # Precompiler Flags
-CXXFLAGS        := -std=c++14 -Wall -Wextra -Wpedantic -Wshadow -O3
+CXXFLAGS        := -std=c++17 -Wall -Wextra -Wpedantic -Wshadow -O3
 LDFLAGS         := # Linker flags
 
 # Makeball list
