@@ -1,0 +1,52 @@
+[
+    {
+        "arguments": [
+            "clang++",
+            "-c",
+            "-isystem",
+            "external/gtest/googlemock/include",
+            "-isystem",
+            "external/gtest/googletest/include",
+            "-isystem",
+            "external/gbenchmark/include",
+            "-I",
+            "include",
+            "-std=c++17",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Wshadow",
+            "-O3",
+            "-o",
+            "build/test/test.o",
+            "test/test.cpp"
+        ],
+        "directory": "/home/renatocf/Documentos/projects/personal/probability",
+        "file": "test/test.cpp"
+    },
+    {
+        "arguments": [
+            "clang++",
+            "-c",
+            "-isystem",
+            "external/gtest/googlemock/include",
+            "-isystem",
+            "external/gtest/googletest/include",
+            "-isystem",
+            "external/gbenchmark/include",
+            "-I",
+            "include",
+            "-std=c++17",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Wshadow",
+            "-O3",
+            "-o",
+            "build/test/probability/probabilityTest.o",
+            "test/probability/probabilityTest.cpp"
+        ],
+        "directory": "/home/renatocf/Documentos/projects/personal/probability",
+        "file": "test/probability/probabilityTest.cpp"
+    }
+]
