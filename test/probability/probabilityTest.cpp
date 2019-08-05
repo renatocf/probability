@@ -174,8 +174,25 @@ TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByAProbability) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero,
+    KeepsItsValueWhenMultipliedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  zero *= convertible_to_half;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByADouble) {
   zero *= 0.5;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByAConvertibleToDouble) {
+  Number<double> convertible_to_half { 0.5 };
+  zero *= convertible_to_half;
   ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
 }
 
@@ -188,9 +205,24 @@ TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByItself) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { zero };
+  zero *= convertible_to_itself;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, KeepsItsValueWhenDividedByAProbability) {
-  probability_t half = 0.5;
-  zero /= half;
+  zero /= 0.5;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, KeepsItsValueWhenDividedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  zero /= convertible_to_half;
   ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
 }
 
@@ -203,14 +235,37 @@ TEST_F(AProbabilityZero, KeepsItsValueWhenDividedByADouble) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero, KeepsItsValueWhenDividedByAConvertibleToDouble) {
+  Number<double> convertible_to_half { 0.5 };
+  zero /= convertible_to_half;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, DiesWhenDividedByItself) {
   ASSERT_DEATH(zero /= zero, "");
 }
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero, DiesWhenDividedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { zero };
+  ASSERT_DEATH(zero /= convertible_to_itself, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, CanBeIncreasedByZero) {
   zero += 0.0;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, CanBeIncreasedByConvertibleToZero) {
+  Number<double> convertible_to_zero { 0.0 };
+  zero += convertible_to_zero;
   ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
 }
 
@@ -223,8 +278,24 @@ TEST_F(AProbabilityZero, CanBeIncreasedByNonZero) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero, CanBeIncreasedByConvertibleToNonZero) {
+  Number<double> convertible_to_non_zero { 0.5 };
+  zero += convertible_to_non_zero;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, CanBeIncreasedByOne) {
   zero += 1.0;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, CanBeIncreasedByConvertibleToOne) {
+  Number<double> convertible_to_one { 1.0 };
+  zero += convertible_to_one;
   ASSERT_THAT(DOUBLE(zero), DoubleEq(1.0));
 }
 
@@ -237,8 +308,23 @@ TEST_F(AProbabilityZero, CanBeDecreasedByZero) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero, CanBeDecreasedByConvertibleToZero) {
+  Number<double> convertible_to_zero { 0.0 };
+  zero -= convertible_to_zero;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, DiesIfDecreasedByNonZero) {
   ASSERT_DEATH(zero -= 0.5, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, DiesIfDecreasedByConvertibleToNonZero) {
+  Number<double> convertible_to_non_zero { 0.5 };
+  ASSERT_DEATH(zero -= convertible_to_non_zero, "");
 }
 
 /*----------------------------------------------------------------------------*/
@@ -249,9 +335,25 @@ TEST_F(AProbabilityZero, IsEqualToItself) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityZero, IsEqualToAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { zero };
+  ASSERT_THAT(zero, Eq(convertible_to_itself));
+  // ASSERT_TRUE(zero == convertible_to_itself);
+  // ASSERT_TRUE(convertible_to_itself == zero);
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityZero, IsSmallerThanAnyNonZeroProbability) {
   probability_t half = 0.5;
   ASSERT_THAT(zero, Lt(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, IsSmallerThanAnyNonZeroConvertibleToProbability) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  ASSERT_THAT(zero, Lt(convertible_to_half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -272,8 +374,25 @@ TEST_F(AProbabilityOne, GetsAProbabilityValueWhenMultipliedByAProbability) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne,
+    GetsAProbabilityValueWhenMultipliedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  one *= convertible_to_half;
+  ASSERT_THAT(one, Eq(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, GetsADoubleValueWhenMultipliedByADouble) {
   one *= 0.5;
+  ASSERT_THAT(DOUBLE(one), DoubleEq(0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityOne, GetsADoubleValueWhenMultipliedByAConvertibleToDouble) {
+  Number<double> convertible_to_half { 0.5 };
+  one *= convertible_to_half;
   ASSERT_THAT(DOUBLE(one), DoubleEq(0.5));
 }
 
@@ -286,9 +405,24 @@ TEST_F(AProbabilityOne, KeepsItsValueWhenMultipliedByItself) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne, GetsADoubleValueWhenMultipliedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { one };
+  one *= convertible_to_itself;
+  ASSERT_THAT(one, Eq(one));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, DiesWhenDividedByAProbability) {
   probability_t half = 0.5;
   ASSERT_DEATH(one /= half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityOne, DiesWhenDividedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  ASSERT_DEATH(one /= convertible_to_half, "");
 }
 
 /*----------------------------------------------------------------------------*/
@@ -299,8 +433,23 @@ TEST_F(AProbabilityOne, DiesWhenDividedByADouble) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne, DiesWhenDividedByAConvertibleToDouble) {
+  Number<double> convertible_to_half { 0.5 };
+  ASSERT_DEATH(one /= convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, KeepsItsValueWhenDividedByItself) {
-  one *= one;
+  one /= one;
+  ASSERT_THAT(one, Eq(one));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityOne, KeepsItsValueWhenDividedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { one };
+  one /= convertible_to_itself;
   ASSERT_THAT(one, Eq(one));
 }
 
@@ -313,14 +462,37 @@ TEST_F(AProbabilityOne, CanBeIncreasedByZero) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne, CanBeIncreasedByConvertibleToZero) {
+  Number<double> convertible_to_zero { 0.0 };
+  one += convertible_to_zero;
+  ASSERT_THAT(DOUBLE(one), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, DiesIfIncreasedByNonZero) {
   ASSERT_DEATH(one += 0.5, "");
 }
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne, DiesIfIncreasedByConvertibleToNonZero) {
+  Number<double> convertible_to_non_zero { 0.5 };
+  ASSERT_DEATH(one += convertible_to_non_zero, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, CanBeDecreasedByZero) {
   one -= 0.0;
+  ASSERT_THAT(DOUBLE(one), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityOne, CanBeDecreasedByConvertibleToZero) {
+  Number<double> convertible_to_zero { 0.0 };
+  one -= convertible_to_zero;
   ASSERT_THAT(DOUBLE(one), DoubleEq(1.0));
 }
 
@@ -333,8 +505,24 @@ TEST_F(AProbabilityOne, CanBeDecreasedByNonZero) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne, CanBeDecreasedByConvertibleToNonZero) {
+  Number<double> convertible_to_non_zero { 0.5 };
+  one -= convertible_to_non_zero;
+  ASSERT_THAT(DOUBLE(one), DoubleEq(0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, CanBeDecreasedByOne) {
   one -= 1.0;
+  ASSERT_THAT(DOUBLE(one), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityOne, CanBeDecreasedByConvertibleToOne) {
+  Number<double> convertible_to_one { 1.0 };
+  one -= convertible_to_one;
   ASSERT_THAT(DOUBLE(one), DoubleEq(0.0));
 }
 
@@ -346,9 +534,23 @@ TEST_F(AProbabilityOne, IsEqualToItself) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityOne, IsEqualToAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { one };
+  ASSERT_THAT(one, Eq(convertible_to_itself));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityOne, IsBiggerThanAnyNonZeroProbability) {
   probability_t half = 0.5;
   ASSERT_THAT(one, Gt(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityOne, IsBiggerThanAnyNonZeroConvertibleToProbability) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  ASSERT_THAT(one, Gt(convertible_to_half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -358,6 +560,15 @@ TEST_F(AProbabilityOne, IsBiggerThanAnyNonZeroProbability) {
 TEST_F(AProbabilityHalf, IsEqualToAnotherProbabilityHalf) {
   probability_t half2 = 0.5;
   ASSERT_THAT(half, Eq(half2));
+  ASSERT_THAT(half2, Eq(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsEqualToAConvertibleToProbabilityHalf) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  ASSERT_THAT(half, Eq(convertible_to_half));
+  ASSERT_THAT(convertible_to_half, Eq(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -365,6 +576,15 @@ TEST_F(AProbabilityHalf, IsEqualToAnotherProbabilityHalf) {
 TEST_F(AProbabilityHalf, IsGreaterOrEqualToAnotherProbabilityHalf) {
   probability_t half2 = 0.5;
   ASSERT_THAT(half, Ge(half2));
+  ASSERT_THAT(half2, Le(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsGreaterOrEqualToAConvertibleToProbabilityHalf) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  ASSERT_THAT(half, Ge(convertible_to_half));
+  ASSERT_THAT(convertible_to_half, Le(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -372,6 +592,15 @@ TEST_F(AProbabilityHalf, IsGreaterOrEqualToAnotherProbabilityHalf) {
 TEST_F(AProbabilityHalf, IsLessOrEqualToAnotherProbabilityHalf) {
   probability_t half2 = 0.5;
   ASSERT_THAT(half, Le(half2));
+  ASSERT_THAT(half2, Ge(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsLessOrEqualToAConvertibleToProbabilityHalf) {
+  Number<probability_t> convertible_to_half { 0.5 };
+  ASSERT_THAT(half, Le(convertible_to_half));
+  ASSERT_THAT(convertible_to_half, Ge(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -379,6 +608,15 @@ TEST_F(AProbabilityHalf, IsLessOrEqualToAnotherProbabilityHalf) {
 TEST_F(AProbabilityHalf, IsDifferentFromAProbabilityAQuarter) {
   probability_t quarter = 0.25;
   ASSERT_THAT(half, Ne(quarter));
+  ASSERT_THAT(quarter, Ne(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsDifferentFromAConvertibleToProbabilityAQuarter) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(half, Ne(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Ne(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -386,6 +624,15 @@ TEST_F(AProbabilityHalf, IsDifferentFromAProbabilityAQuarter) {
 TEST_F(AProbabilityHalf, IsGreaterThanAProbabilityAQuarter) {
   probability_t quarter = 0.25;
   ASSERT_THAT(half, Gt(quarter));
+  ASSERT_THAT(quarter, Le(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsGreaterThanAConvertibleToProbabilityAQuarter) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(half, Gt(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Le(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -393,6 +640,16 @@ TEST_F(AProbabilityHalf, IsGreaterThanAProbabilityAQuarter) {
 TEST_F(AProbabilityHalf, IsGreaterOrEqualThanAProbabilityAQuarter) {
   probability_t quarter = 0.25;
   ASSERT_THAT(half, Ge(quarter));
+  ASSERT_THAT(quarter, Lt(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf,
+    IsGreaterOrEqualThanAConvertibleToProbabilityAQuarter) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(half, Ge(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Lt(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -400,6 +657,16 @@ TEST_F(AProbabilityHalf, IsGreaterOrEqualThanAProbabilityAQuarter) {
 TEST_F(AProbabilityHalf, IsDifferentFromAProbabilityThreeQuarters) {
   probability_t three_quarters = 0.75;
   ASSERT_THAT(half, Ne(three_quarters));
+  ASSERT_THAT(three_quarters, Ne(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf,
+    IsDifferentFromAConvertibleToProbabilityThreeQuarters) {
+  Number<probability_t> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(half, Ne(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ne(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -407,6 +674,15 @@ TEST_F(AProbabilityHalf, IsDifferentFromAProbabilityThreeQuarters) {
 TEST_F(AProbabilityHalf, IsLessThanAProbabilityThreeQuarters) {
   probability_t three_quarters = 0.75;
   ASSERT_THAT(half, Lt(three_quarters));
+  ASSERT_THAT(three_quarters, Ge(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsLessThanAConvertibleToProbabilityThreeQuarters) {
+  Number<probability_t> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(half, Lt(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ge(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -414,6 +690,16 @@ TEST_F(AProbabilityHalf, IsLessThanAProbabilityThreeQuarters) {
 TEST_F(AProbabilityHalf, IsLessOrEqualThanAProbabilityThreeQuarters) {
   probability_t three_quarters = 0.75;
   ASSERT_THAT(half, Le(three_quarters));
+  ASSERT_THAT(three_quarters, Gt(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf,
+    IsLessOrEqualThanAConvertibleToProbabilityThreeQuarters) {
+  Number<probability_t> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(half, Le(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Gt(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -424,16 +710,39 @@ TEST_F(AProbabilityHalf, IsEqualToADoubleHalf) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, IsEqualToAConvertibleToDoubleHalf) {
+  Number<double> convertible_to_half { 0.5 };
+  ASSERT_THAT(DOUBLE(half), DoubleEq(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, IsGreaterOrEqualToADoubleHalf) {
   ASSERT_THAT(half, Ge(0.5));
-  ASSERT_THAT(0.5,  Le(half));
+  ASSERT_THAT(0.5, Le(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsGreaterOrEqualToAConvertibleToDoubleHalf) {
+  Number<double> convertible_to_half { 0.5 };
+  ASSERT_THAT(half, Ge(convertible_to_half));
+  ASSERT_THAT(convertible_to_half, Le(half));
 }
 
 /*----------------------------------------------------------------------------*/
 
 TEST_F(AProbabilityHalf, IsLessOrEqualToADoubleHalf) {
   ASSERT_THAT(half, Le(0.5));
-  ASSERT_THAT(0.5,  Ge(half));
+  ASSERT_THAT(0.5, Ge(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsLessOrEqualToAConvertibleToDoubleHalf) {
+  Number<double> convertible_to_half { 0.5 };
+  ASSERT_THAT(half, Le(convertible_to_half));
+  ASSERT_THAT(convertible_to_half, Ge(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -445,9 +754,25 @@ TEST_F(AProbabilityHalf, IsDifferentFromADoubleAQuarter) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, IsDifferentFromAConvertibleToDoubleAQuarter) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(half, Ne(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Ne(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, IsGreaterThanADoubleAQuarter) {
   ASSERT_THAT(half, Gt(0.25));
   ASSERT_THAT(0.25, Le(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsGreaterThanAConvertibleToDoubleAQuarter) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(half, Gt(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Le(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -459,9 +784,25 @@ TEST_F(AProbabilityHalf, IsGreaterOrEqualThanADoubleAQuarter) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, IsGreaterOrEqualThanAConvertibleToDoubleAQuarter) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(half, Ge(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Lt(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, IsDifferentFromADoubleThreeQuarters) {
   ASSERT_THAT(half, Ne(0.75));
   ASSERT_THAT(0.75, Ne(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsDifferentFromAConvertibleToDoubleThreeQuarters) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(half, Ne(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ne(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -473,9 +814,25 @@ TEST_F(AProbabilityHalf, IsLessThanADoubleThreeQuarters) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, IsLessThanAConvertibleToDoubleThreeQuarters) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(half, Lt(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ge(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, IsLessOrEqualThanADoubleThreeQuarters) {
   ASSERT_THAT(half, Le(0.75));
   ASSERT_THAT(0.75, Gt(half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, IsLessOrEqualThanAConvertibleToDoubleThreeQuarters) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(half, Le(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Gt(half));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -486,8 +843,22 @@ TEST_F(AProbabilityHalf, CanBeRightMultipliedByADouble) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, CanBeRightMultipliedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(half * convertible_to_quarter), DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, CanBeLeftMultipliedByADouble) {
   ASSERT_THAT(DOUBLE(0.4 * half), DoubleEq(0.2));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeLeftMultipliedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter * half), DoubleEq(0.125));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -499,9 +870,23 @@ TEST_F(AProbabilityHalf, CanBeRightMultipliedByAProbability) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, CanBeRightMultipliedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(half * convertible_to_quarter), DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, CanBeLeftMultipliedByAProbability) {
   probability_t quarter = 0.25;
   ASSERT_THAT(DOUBLE(quarter * half), DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeLeftMultipliedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter * half), DoubleEq(0.125));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -512,54 +897,124 @@ TEST_F(AProbabilityHalf, CanBeMultipliedByItself) {
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeRightDividedByASmallerDouble) {
+TEST_F(AProbabilityHalf, CanBeRightMultipliedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(half * convertible_to_itself), DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeLeftMultipliedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself * half), DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeDividedByASmallerDouble) {
   ASSERT_DEATH(half / 0.4, "");
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeRightDividedByABiggerDouble) {
+TEST_F(AProbabilityHalf, CanBeDividedByASmallerConvertibleToDouble) {
+  Number<double> convertible_to_smaller { 0.4 };
+  ASSERT_DEATH(half / convertible_to_smaller, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeDividedByABiggerDouble) {
   ASSERT_THAT(DOUBLE(half / 0.6), DoubleEq(0.5/0.6));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeLeftDividedByASmallerDouble) {
+TEST_F(AProbabilityHalf, CanBeDividedByABiggerConvertibleToDouble) {
+  Number<double> convertible_to_bigger { 0.6 };
+  ASSERT_THAT(DOUBLE(half / convertible_to_bigger), DoubleEq(0.5/0.6));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanDivideASmallerDouble) {
   ASSERT_THAT(DOUBLE(0.4 / half), DoubleEq(0.4/0.5));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeLeftDividedByABiggerDouble) {
+TEST_F(AProbabilityHalf, CanDivideASmallerConvertibleToDouble) {
+  Number<double> convertible_to_smaller { 0.4 };
+  ASSERT_THAT(DOUBLE(convertible_to_smaller / half), DoubleEq(0.4/0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanDivideABiggerDouble) {
   ASSERT_DEATH(0.6 / half, "");
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeRightDividedByASmallerProbability) {
+TEST_F(AProbabilityHalf, CanDivideABiggerConvertibleToDouble) {
+  Number<double> convertible_to_bigger { 0.6 };
+  ASSERT_DEATH(convertible_to_bigger / half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeDividedByASmallerProbability) {
   probability_t probability = 0.4;
   ASSERT_DEATH(half / probability, "");
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeRightDividedByABiggerProbability) {
+TEST_F(AProbabilityHalf, CanBeDividedByASmallerConvertibleToProbability) {
+  Number<probability_t> convertible_to_smaller { 0.4 };
+  ASSERT_DEATH(half / convertible_to_smaller, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeDividedByABiggerProbability) {
   probability_t probability = 0.6;
   ASSERT_THAT(DOUBLE(half / probability), DoubleEq(0.5/0.6));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeLeftDividedByASmallerProbability) {
+TEST_F(AProbabilityHalf, CanBeDividedByABiggerConvertibleToProbability) {
+  Number<probability_t> convertible_to_bigger { 0.6 };
+  ASSERT_THAT(DOUBLE(half / convertible_to_bigger), DoubleEq(0.5/0.6));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanDivideASmallerProbability) {
   probability_t probability = 0.4;
   ASSERT_THAT(DOUBLE(probability / half), DoubleEq(0.4/0.5));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeLeftDividedByABiggerProbability) {
+TEST_F(AProbabilityHalf, CanDivideASmallerConvertibleToProbability) {
+  Number<probability_t> convertible_to_smaller { 0.4 };
+  ASSERT_THAT(DOUBLE(convertible_to_smaller / half), DoubleEq(0.4/0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanDivideABiggerProbability) {
   probability_t probability = 0.6;
   ASSERT_DEATH(probability / half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanDivideABiggerConvertibleToProbability) {
+  Number<probability_t> convertible_to_bigger { 0.6 };
+  ASSERT_DEATH(convertible_to_bigger / half, "");
 }
 
 /*----------------------------------------------------------------------------*/
@@ -570,14 +1025,70 @@ TEST_F(AProbabilityHalf, CanBeDividedByItself) {
 
 /*----------------------------------------------------------------------------*/
 
+TEST_F(AProbabilityHalf, CanBeDividedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(half / convertible_to_itself), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanDivideAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself / half), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
 TEST_F(AProbabilityHalf, CanBeRightAddedByADouble) {
-  ASSERT_THAT(DOUBLE(half + 0.4), DoubleEq(0.9));
+  ASSERT_THAT(DOUBLE(half + 0.25), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeRightAddedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(half + convertible_to_quarter), DoubleEq(0.75));
 }
 
 /*----------------------------------------------------------------------------*/
 
 TEST_F(AProbabilityHalf, CanBeLeftAddedByADouble) {
-  ASSERT_THAT(DOUBLE(0.4 + half), DoubleEq(0.9));
+  ASSERT_THAT(DOUBLE(0.25 + half), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeLeftAddedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter + half), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeRightAddedByAProbability) {
+  probability_t quarter = 0.25;
+  ASSERT_THAT(DOUBLE(half + quarter), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeRightAddedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(half + convertible_to_quarter), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeLeftAddedByAProbability) {
+  probability_t quarter = 0.25;
+  ASSERT_THAT(DOUBLE(quarter + half), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeLeftAddedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter + half), DoubleEq(0.75));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -588,32 +1099,88 @@ TEST_F(AProbabilityHalf, CanBeAddedByItself) {
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeRightSubtractedByASmallerDouble) {
-  ASSERT_THAT(DOUBLE(half - 0.4), DoubleEq(0.1));
+TEST_F(AProbabilityHalf, CanBeRightAddedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(half + convertible_to_itself), DoubleEq(1.0));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeRightSubtractedByABiggerDouble) {
-  ASSERT_DEATH(half - 0.6, "");
+TEST_F(AProbabilityHalf, CanBeLeftAddedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself + half), DoubleEq(1.0));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeLeftSubtractedByASmallerDouble) {
-  ASSERT_DEATH(0.4 - half, "");
+TEST_F(AProbabilityHalf, CanSubtractASmallerDouble) {
+  ASSERT_THAT(DOUBLE(half - 0.25), DoubleEq(0.25));
 }
 
 /*----------------------------------------------------------------------------*/
 
-TEST_F(AProbabilityHalf, CanBeLeftSubtractedByABiggerDouble) {
-  ASSERT_THAT(DOUBLE(0.6 - half), DoubleEq(0.1));
+TEST_F(AProbabilityHalf, CanSubtractASmallerConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(half - convertible_to_quarter), DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanSubtractABiggerDouble) {
+  ASSERT_DEATH(half - 0.75, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanSubtractABiggerConvertibleToDouble) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_DEATH(half - convertible_to_three_quarters, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeSubtractedFromASmallerDouble) {
+  ASSERT_DEATH(0.25 - half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeSubtractedFromASmallerConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_DEATH(convertible_to_quarter - half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeSubtractedFromABiggerDouble) {
+  ASSERT_THAT(DOUBLE(0.75 - half), DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeSubtractedFromABiggerConvertibleToDouble) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(DOUBLE(convertible_to_three_quarters - half), DoubleEq(0.25));
 }
 
 /*----------------------------------------------------------------------------*/
 
 TEST_F(AProbabilityHalf, CanBeSubtractedByItself) {
   ASSERT_THAT(DOUBLE(half - half), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanSubtractAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(half - convertible_to_itself), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityHalf, CanBeSubtractedFromAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself - half), DoubleEq(0.0));
 }
 
 /*----------------------------------------------------------------------------*/
