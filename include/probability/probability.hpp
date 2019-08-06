@@ -21,6 +21,7 @@
 
 // Standard headers
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <cassert>
 #include <algorithm>
@@ -32,14 +33,48 @@
 
 namespace probability {
 
-// Forward declaration
+/*----------------------------------------------------------------------------*/
+/*                            FORWARD DECLARATIONS                            */
+/*----------------------------------------------------------------------------*/
+
 template<typename T> class EmptyChecker;
 template<typename T, std::size_t ulp> class ProbabilityChecker;
 
 template<typename T, std::size_t ulp = 0, typename C = EmptyChecker<T>>
 class LogFloatingPoint;
 
-// Aliases
+/*----------------------------------------------------------------------------*/
+/*                                  HELPERS                                   */
+/*----------------------------------------------------------------------------*/
+
+template<typename, typename = std::void_t<>>
+struct is_log_floating_point : std::false_type {};
+
+template<typename T, std::size_t ulp, typename C>
+struct is_log_floating_point<LogFloatingPoint<T, ulp, C>> : std::true_type {};
+
+template<typename Container>
+struct is_log_floating_point<
+    Container,
+    std::void_t<
+      typename Container::value_type,
+      typename Container::value_type::value_type
+    >
+  >
+  : std::is_convertible<
+      Container,
+      LogFloatingPoint<typename Container::value_type::value_type,
+                       Container::value_type::ULP,
+                       typename Container::value_type::checker_type>
+    > {};
+
+template<typename... Args>
+constexpr bool is_log_floating_point_v = is_log_floating_point<Args...>::value;
+
+/*----------------------------------------------------------------------------*/
+/*                                  ALIASES                                   */
+/*----------------------------------------------------------------------------*/
+
 using log_float_t = LogFloatingPoint<float>;
 using log_double_t = LogFloatingPoint<double>;
 using log_long_double_t = LogFloatingPoint<long double>;
@@ -53,6 +88,10 @@ using probability_long_double_t = Probability<long double>;
 
 using probability_t = probability_double_t;
 
+/*----------------------------------------------------------------------------*/
+/*                             LOG FLOATING POINT                             */
+/*----------------------------------------------------------------------------*/
+
 /**
  * @class LogFloatingPoint
  * @tparam T Value type, used for internal store
@@ -65,6 +104,7 @@ class LogFloatingPoint {
  public:
   using value_type = T;
   using checker_type = C;
+  static constexpr size_t ULP = ulp;
 
   // Constructors
   LogFloatingPoint() = default;
@@ -74,10 +114,10 @@ class LogFloatingPoint {
     check_initial_value(v);
   }
 
-  template<typename U,
+  template<typename Value,
     typename std::enable_if_t<
-      !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-  LogFloatingPoint(const U& v)
+      std::is_convertible_v<Value, value_type>, void>* = nullptr>
+  LogFloatingPoint(const Value& v)
       : LogFloatingPoint(static_cast<const value_type&>(v)) {
   }
 
@@ -133,30 +173,6 @@ class LogFloatingPoint {
     return *this;
   }
 
-  bool operator==(const LogFloatingPoint& rhs) const noexcept {
-    return value == rhs.data();
-  }
-
-  bool operator!=(const LogFloatingPoint& rhs) const noexcept {
-    return !operator==(rhs);
-  }
-
-  bool operator<(const LogFloatingPoint& rhs) const noexcept {
-    return value < rhs.data();
-  }
-
-  bool operator<=(const LogFloatingPoint& rhs) const noexcept {
-    return operator<(rhs) || operator==(rhs);
-  }
-
-  bool operator>(const LogFloatingPoint& rhs) const noexcept {
-    return !operator<=(rhs);
-  }
-
-  bool operator>=(const LogFloatingPoint& rhs) const noexcept {
-    return !operator<(rhs);
-  }
-
   // Concrete methods
   value_type& data() noexcept {
     return value;
@@ -189,214 +205,501 @@ class LogFloatingPoint {
   }
 };
 
-// Operator overloads
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator==(const U& lhs,
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR==                                  */
+/*----------------------------------------------------------------------------*/
+
+template<typename T, std::size_t ulp, typename C>
+inline bool operator==(const LogFloatingPoint<T, ulp, C>& lhs,
                        const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return std::log(static_cast<const T&>(lhs)) == rhs.data();
+  return lhs.data() == rhs.data();
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator==(const U& lhs,
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline bool operator==(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) == static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator==(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs == static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator==(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs.data() == std::log(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline bool operator==(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) == static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator==(const Lhs& lhs,
                        const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) == rhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator!=(const U& lhs,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator==(const Lhs& lhs,
                        const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return !operator==(lhs, rhs);
+  return std::log(static_cast<const T&>(lhs)) == rhs.data();
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator!=(const U& lhs,
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline bool operator==(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) == static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR!=                                  */
+/*----------------------------------------------------------------------------*/
+
+template<typename T, std::size_t ulp, typename C>
+inline bool operator!=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return lhs.data() != rhs.data();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline bool operator!=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) != static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator!=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs != static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator!=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs.data() != std::log(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline bool operator!=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) != static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator!=(const Lhs& lhs,
                        const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) != rhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator<(const U& lhs,
-                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return std::log(static_cast<const T&>(lhs)) < rhs.data();
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator!=(const Lhs& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return std::log(static_cast<const T&>(lhs)) != rhs.data();
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator<(const U& lhs,
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline bool operator!=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) != static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR<                                   */
+/*----------------------------------------------------------------------------*/
+
+template<typename T, std::size_t ulp, typename C>
+inline bool operator<(const LogFloatingPoint<T, ulp, C>& lhs,
+                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return lhs.data() < rhs.data();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline bool operator<(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) < static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator<(const LogFloatingPoint<T, ulp, C>& lhs,
+                      const Rhs& rhs) noexcept {
+  return lhs < static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator<(const LogFloatingPoint<T, ulp, C>& lhs,
+                      const Rhs& rhs) noexcept {
+  return lhs.data() < std::log(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline bool operator<(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) < static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator<(const Lhs& lhs,
                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) < rhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator<=(const U& lhs,
-                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return operator<(lhs, rhs) || operator==(lhs, rhs);
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator<(const Lhs& lhs,
+                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return std::log(static_cast<const T&>(lhs)) < rhs.data();
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator<=(const U& lhs,
-                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline bool operator<(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) < static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR<=                                  */
+/*----------------------------------------------------------------------------*/
+
+template<typename T, std::size_t ulp, typename C>
+inline bool operator<=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return lhs.data() <= rhs.data();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline bool operator<=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) <= static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator<=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs <= static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator<=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs.data() <= std::log(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline bool operator<=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) <= static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator<=(const Lhs& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) <= rhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator>(const U& lhs,
-                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return !operator<=(lhs, rhs);
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator<=(const Lhs& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return std::log(static_cast<const T&>(lhs)) <= rhs.data();
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator>(const U& lhs,
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline bool operator<=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) <= static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR>                                   */
+/*----------------------------------------------------------------------------*/
+
+template<typename T, std::size_t ulp, typename C>
+inline bool operator>(const LogFloatingPoint<T, ulp, C>& lhs,
+                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return lhs.data() > rhs.data();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline bool operator>(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) > static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator>(const LogFloatingPoint<T, ulp, C>& lhs,
+                      const Rhs& rhs) noexcept {
+  return lhs > static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator>(const LogFloatingPoint<T, ulp, C>& lhs,
+                      const Rhs& rhs) noexcept {
+  return lhs.data() > std::log(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline bool operator>(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) > static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator>(const Lhs& lhs,
                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) > rhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator>=(const U& lhs,
-                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return !operator<(lhs, rhs);
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator>(const Lhs& lhs,
+                      const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return std::log(static_cast<const T&>(lhs)) > rhs.data();
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator>=(const U& lhs,
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline bool operator>(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) > static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR>=                                  */
+/*----------------------------------------------------------------------------*/
+
+template<typename T, std::size_t ulp, typename C>
+inline bool operator>=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return lhs.data() >= rhs.data();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline bool operator>=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) >= static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator>=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs >= static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
+inline bool operator>=(const LogFloatingPoint<T, ulp, C>& lhs,
+                       const Rhs& rhs) noexcept {
+  return lhs.data() >= std::log(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline bool operator>=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) >= static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator>=(const Lhs& lhs,
                        const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) >= rhs;
 }
 
-/**/
+/*----------------------------------------------------------------------------*/
 
-template<typename U, typename T, std::size_t ulp, typename C,
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline bool operator>=(const Lhs& lhs,
+                       const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return std::log(static_cast<const T&>(lhs)) >= rhs.data();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
   void>* = nullptr>
-inline bool operator==(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return lhs.data() == std::log(rhs);
+inline bool operator>=(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) >= static_cast<const VTRhs&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator==(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return lhs == static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator!=(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return !operator==(lhs, rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator!=(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return lhs != static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator<(const LogFloatingPoint<T, ulp, C>& lhs,
-                      const U& rhs) noexcept {
-  return lhs.data() < std::log(static_cast<const T&>(rhs));
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator<(const LogFloatingPoint<T, ulp, C>& lhs,
-                      const U& rhs) noexcept {
-  return lhs < static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator<=(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return operator<(lhs, rhs) || operator==(lhs, rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator<=(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return lhs <= static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator>(const LogFloatingPoint<T, ulp, C>& lhs,
-                      const U& rhs) noexcept {
-  return !operator<=(lhs, rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator>(const LogFloatingPoint<T, ulp, C>& lhs,
-                      const U& rhs) noexcept {
-  return lhs > static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
-inline bool operator>=(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return !operator<(lhs, rhs);
-}
-
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline bool operator>=(const LogFloatingPoint<T, ulp, C>& lhs,
-                       const U& rhs) noexcept {
-  return lhs >= static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
-}
-
-/**/
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR*                                   */
+/*----------------------------------------------------------------------------*/
 
 template<typename T, std::size_t ulp, typename C>
 inline LogFloatingPoint<T, ulp, C>
@@ -406,39 +709,83 @@ operator*(LogFloatingPoint<T, ulp, C> lhs,
   return lhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
   typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline LogFloatingPoint<T, ulp, C>
-operator*(const LogFloatingPoint<T, ulp, C>& lhs, const U& rhs) noexcept {
-  return { static_cast<const T&>(lhs) * static_cast<const T&>(rhs) };
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
+  void>* = nullptr>
+inline VTLhs operator*(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) * static_cast<const VTRhs&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator*(const LogFloatingPoint<T, ulp, C>& lhs, const U& rhs) noexcept {
+operator*(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
   return lhs * static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator*(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return { static_cast<const T&>(lhs) * static_cast<const T&>(rhs) };
+operator*(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
+  return lhs * LogFloatingPoint<T, ulp, C>(static_cast<const T&>(rhs));
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline VTLhs operator*(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) * static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator*(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+operator*(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) * rhs;
 }
 
-/**/
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline LogFloatingPoint<T, ulp, C>
+operator*(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  LogFloatingPoint<T, ulp, C> result(static_cast<const T&>(lhs));
+  result *= rhs;
+  return result;
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline VTRhs operator*(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) * static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR/                                   */
+/*----------------------------------------------------------------------------*/
 
 template<typename T, std::size_t ulp, typename C>
 inline LogFloatingPoint<T, ulp, C>
@@ -448,41 +795,83 @@ operator/(LogFloatingPoint<T, ulp, C> lhs,
   return lhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
   typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
   void>* = nullptr>
-inline LogFloatingPoint<T, ulp, C>
-operator/(const LogFloatingPoint<T, ulp, C>& lhs, const U& rhs) noexcept {
-  return { static_cast<const T&>(lhs) / static_cast<const T&>(rhs) };
+inline VTLhs operator/(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) / static_cast<const VTRhs&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator/(const LogFloatingPoint<T, ulp, C>& lhs, const U& rhs) noexcept {
+operator/(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
   return lhs / static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator/(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return { static_cast<const T&>(lhs) / static_cast<const T&>(rhs) };
+operator/(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
+  return lhs / LogFloatingPoint<T, ulp, C>(static_cast<const T&>(rhs));
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline VTLhs operator/(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) / static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator/(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+operator/(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) / rhs;
 }
 
-/**/
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline LogFloatingPoint<T, ulp, C>
+operator/(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  LogFloatingPoint<T, ulp, C> result(static_cast<const T&>(lhs));
+  result /= rhs;
+  return result;
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline VTRhs operator/(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) / static_cast<const VTRhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR+                                   */
+/*----------------------------------------------------------------------------*/
 
 template<typename T, std::size_t ulp, typename C>
 inline LogFloatingPoint<T, ulp, C>
@@ -492,43 +881,83 @@ operator+(LogFloatingPoint<T, ulp, C> lhs,
   return lhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
   typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
   void>* = nullptr>
-inline LogFloatingPoint<T, ulp, C>
-operator+(LogFloatingPoint<T, ulp, C> lhs, const U& rhs) noexcept {
-  return lhs + LogFloatingPoint<T, ulp, C>(rhs);
+inline VTLhs operator+(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) + static_cast<const VTRhs&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator+(LogFloatingPoint<T, ulp, C> lhs, const U& rhs) noexcept {
+operator+(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
   return lhs + static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator+(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+operator+(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
+  return lhs + LogFloatingPoint<T, ulp, C>(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline VTLhs operator+(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) + static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline LogFloatingPoint<T, ulp, C>
+operator+(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) + rhs;
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline LogFloatingPoint<T, ulp, C>
+operator+(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   LogFloatingPoint<T, ulp, C> result(static_cast<const T&>(lhs));
   result += rhs;
   return result;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline LogFloatingPoint<T, ulp, C>
-operator+(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) + rhs;
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline VTRhs operator+(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) + static_cast<const VTRhs&>(rhs);
 }
 
-/**/
+/*----------------------------------------------------------------------------*/
+/*                                OPERATOR-                                   */
+/*----------------------------------------------------------------------------*/
 
 template<typename T, std::size_t ulp, typename C>
 inline LogFloatingPoint<T, ulp, C>
@@ -538,41 +967,83 @@ operator-(LogFloatingPoint<T, ulp, C> lhs,
   return lhs;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTRhs = typename Rhs::value_type,
   typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
+    is_log_floating_point_v<VTLhs> && is_log_floating_point_v<VTRhs>,
   void>* = nullptr>
-inline LogFloatingPoint<T, ulp, C>
-operator-(LogFloatingPoint<T, ulp, C> lhs, const U& rhs) noexcept {
-  return lhs - LogFloatingPoint<T, ulp, C>(static_cast<const T&>(rhs));
+inline VTLhs operator-(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) - static_cast<const VTRhs&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator-(LogFloatingPoint<T, ulp, C> lhs, const U& rhs) noexcept {
+operator-(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
   return lhs - static_cast<const LogFloatingPoint<T, ulp, C>&>(rhs);
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
-  typename std::enable_if_t<
-    !std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>,
-  void>* = nullptr>
+/*----------------------------------------------------------------------------*/
+
+template<typename Rhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Rhs>, void>* = nullptr>
 inline LogFloatingPoint<T, ulp, C>
-operator-(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+operator-(const LogFloatingPoint<T, ulp, C>& lhs, const Rhs& rhs) noexcept {
+  return lhs - LogFloatingPoint<T, ulp, C>(static_cast<const T&>(rhs));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTLhs = typename Lhs::value_type,
+  typename VTVTLhs = typename VTLhs::value_type,
+  typename std::enable_if_t<
+    is_log_floating_point_v<VTLhs> && std::is_convertible_v<Rhs, VTVTLhs>,
+  void>* = nullptr>
+inline VTLhs operator-(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTLhs&>(lhs) - static_cast<const VTVTLhs&>(rhs);
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline LogFloatingPoint<T, ulp, C>
+operator-(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
+  return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) - rhs;
+}
+
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename T, std::size_t ulp, typename C,
+  typename std::enable_if_t<!is_log_floating_point_v<Lhs>, void>* = nullptr>
+inline LogFloatingPoint<T, ulp, C>
+operator-(const Lhs& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
   LogFloatingPoint<T, ulp, C> result(static_cast<const T&>(lhs));
   result -= rhs;
   return result;
 }
 
-template<typename U, typename T, std::size_t ulp, typename C,
+/*----------------------------------------------------------------------------*/
+
+template<typename Lhs, typename Rhs,
+  typename VTRhs = typename Rhs::value_type,
+  typename VTVTRhs = typename VTRhs::value_type,
   typename std::enable_if_t<
-    std::is_convertible_v<U, LogFloatingPoint<T, ulp, C>>, void>* = nullptr>
-inline LogFloatingPoint<T, ulp, C>
-operator-(const U& lhs, const LogFloatingPoint<T, ulp, C>& rhs) noexcept {
-  return static_cast<const LogFloatingPoint<T, ulp, C>&>(lhs) - rhs;
+    is_log_floating_point_v<VTRhs> && std::is_convertible_v<Lhs, VTVTRhs>,
+  void>* = nullptr>
+inline VTRhs operator-(const Lhs& lhs, const Rhs& rhs) noexcept {
+  return static_cast<const VTVTRhs&>(lhs) - static_cast<const VTRhs&>(rhs);
 }
+
+/*----------------------------------------------------------------------------*/
+/*                               EMPTY CHECKER                                */
+/*----------------------------------------------------------------------------*/
 
 /**
  * @class EmptyChecker
@@ -591,6 +1062,10 @@ class EmptyChecker {
   static void check_range(value_type /* value */) {
   }
 };
+
+/*----------------------------------------------------------------------------*/
+/*                             PROBABILITY CHECKER                            */
+/*----------------------------------------------------------------------------*/
 
 /**
  * @class ProbabilityChecker
@@ -618,6 +1093,8 @@ class ProbabilityChecker {
   static constexpr auto limit
     = std::numeric_limits<value_type>::epsilon() * (1 << ulp);
 };
+
+/*----------------------------------------------------------------------------*/
 
 }  // namespace probability
 

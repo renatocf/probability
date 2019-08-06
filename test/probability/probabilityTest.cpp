@@ -21,6 +21,7 @@
 
 // External headers
 #include "gmock/gmock.h"
+#include <type_traits>
 
 // Tested header
 #include "probability/probability.hpp"
@@ -41,6 +42,7 @@ using ::testing::Ge;
 
 using ::testing::DoubleEq;
 
+using probability::log_double_t;
 using probability::probability_t;
 
 #define DOUBLE(X) static_cast<double>(X)
@@ -77,6 +79,10 @@ struct AProbabilityOne : public testing::Test {
 
 struct AProbabilityHalf : public testing::Test {
   probability_t half = 0.5;
+};
+
+struct AConvertibleToProbabilityHalf : public testing::Test {
+  Number<probability_t> convertible_to_half { 0.5 };
 };
 
 /*\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/
@@ -178,6 +184,14 @@ TEST_F(AProbabilityZero,
     KeepsItsValueWhenMultipliedByAConvertibleToProbability) {
   Number<probability_t> convertible_to_half { 0.5 };
   zero *= convertible_to_half;
+  ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AProbabilityZero, KeepsItsValueWhenMultipliedByALogDouble) {
+  log_double_t half = 0.5;
+  zero *= half;
   ASSERT_THAT(DOUBLE(zero), DoubleEq(0.0));
 }
 
@@ -338,8 +352,7 @@ TEST_F(AProbabilityZero, IsEqualToItself) {
 TEST_F(AProbabilityZero, IsEqualToAConvertibleToItself) {
   Number<probability_t> convertible_to_itself { zero };
   ASSERT_THAT(zero, Eq(convertible_to_itself));
-  // ASSERT_TRUE(zero == convertible_to_itself);
-  // ASSERT_TRUE(convertible_to_itself == zero);
+  ASSERT_THAT(convertible_to_itself, Eq(zero));
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1183,4 +1196,555 @@ TEST_F(AProbabilityHalf, CanBeSubtractedFromAConvertibleToItself) {
   ASSERT_THAT(DOUBLE(convertible_to_itself - half), DoubleEq(0.0));
 }
 
+/*----------------------------------------------------------------------------*/
+/*                       TESTS FOR CONVERTIBLE TO P=0.5                       */
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsEqualToAnotherConvertibleToProbabilityHalf) {
+  Number<probability_t> convertible_to_half2 { 0.5 };
+  ASSERT_THAT(convertible_to_half, Eq(convertible_to_half2));
+  ASSERT_THAT(convertible_to_half2, Eq(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsGreaterOrEqualToAnotherConvertibleToProbabilityHalf) {
+  Number<probability_t> convertible_to_half2 { 0.5 };
+  ASSERT_THAT(convertible_to_half, Ge(convertible_to_half2));
+  ASSERT_THAT(convertible_to_half2, Le(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsLessOrEqualToAnotherConvertibleToProbabilityHalf) {
+  Number<probability_t> convertible_to_half2 { 0.5 };
+  ASSERT_THAT(convertible_to_half, Le(convertible_to_half2));
+  ASSERT_THAT(convertible_to_half2, Ge(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsDifferentFromAnotherConvertibleToProbabilityAQuarter) {
+  Number<probability_t> quarter { 0.25 };
+  ASSERT_THAT(convertible_to_half, Ne(quarter));
+  ASSERT_THAT(quarter, Ne(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsGreaterThanAnotherConvertibleToProbabilityAQuarter) {
+  Number<probability_t> quarter { 0.25 };
+  ASSERT_THAT(convertible_to_half, Gt(quarter));
+  ASSERT_THAT(quarter, Le(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsGreaterOrEqualThanAnotherConvertibleToProbabilityAQuarter) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(convertible_to_half, Ge(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Lt(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsDifferentFromAnotherConvertibleToProbabilityThreeQuarters) {
+  Number<probability_t> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(convertible_to_half, Ne(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ne(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsLessThanAnotherConvertibleToProbabilityThreeQuarters) {
+  Number<probability_t> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(convertible_to_half, Lt(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ge(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsLessOrEqualThanAnotherConvertibleToProbabilityThreeQuarters) {
+  Number<probability_t> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(convertible_to_half, Le(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Gt(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, IsGreaterThanADoubleAQuarter) {
+  ASSERT_THAT(convertible_to_half, Gt(0.25));
+  ASSERT_THAT(0.25, Le(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsGreaterThanAConvertibleToDoubleAQuarter) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(convertible_to_half, Gt(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Le(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, IsGreaterOrEqualThanADoubleAQuarter) {
+  ASSERT_THAT(convertible_to_half, Ge(0.25));
+  ASSERT_THAT(0.25, Lt(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsGreaterOrEqualThanAConvertibleToDoubleAQuarter) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(convertible_to_half, Ge(convertible_to_quarter));
+  ASSERT_THAT(convertible_to_quarter, Lt(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, IsDifferentFromADoubleThreeQuarters) {
+  ASSERT_THAT(convertible_to_half, Ne(0.75));
+  ASSERT_THAT(0.75, Ne(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsDifferentFromAConvertibleToDoubleThreeQuarters) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(convertible_to_half, Ne(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ne(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, IsLessThanADoubleThreeQuarters) {
+  ASSERT_THAT(convertible_to_half, Lt(0.75));
+  ASSERT_THAT(0.75, Ge(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsLessThanAConvertibleToDoubleThreeQuarters) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(convertible_to_half, Lt(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Ge(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, IsLessOrEqualThanADoubleThreeQuarters) {
+  ASSERT_THAT(convertible_to_half, Le(0.75));
+  ASSERT_THAT(0.75, Gt(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    IsLessOrEqualThanAConvertibleToDoubleThreeQuarters) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(convertible_to_half, Le(convertible_to_three_quarters));
+  ASSERT_THAT(convertible_to_three_quarters, Gt(convertible_to_half));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeRightMultipliedByADouble) {
+  ASSERT_THAT(DOUBLE(convertible_to_half * 0.4), DoubleEq(0.2));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeRightMultipliedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_half * convertible_to_quarter),
+              DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeLeftMultipliedByADouble) {
+  ASSERT_THAT(DOUBLE(0.4 * convertible_to_half), DoubleEq(0.2));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeLeftMultipliedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter * convertible_to_half),
+              DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeRightMultipliedByAProbability) {
+  probability_t quarter = 0.25;
+  ASSERT_THAT(DOUBLE(convertible_to_half * quarter), DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeRightMultipliedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_half * convertible_to_quarter),
+              DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeLeftMultipliedByAProbability) {
+  probability_t quarter = 0.25;
+  ASSERT_THAT(DOUBLE(quarter * convertible_to_half), DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+       CanBeLeftMultipliedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter * convertible_to_half),
+              DoubleEq(0.125));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeMultipliedByItself) {
+  ASSERT_THAT(DOUBLE(convertible_to_half * convertible_to_half),
+              DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+       CanBeRightMultipliedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_half * convertible_to_itself),
+              DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeLeftMultipliedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself * convertible_to_half),
+              DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeDividedByASmallerDouble) {
+  ASSERT_DEATH(convertible_to_half / 0.4, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeDividedByASmallerConvertibleToDouble) {
+  Number<double> convertible_to_smaller { 0.4 };
+  ASSERT_DEATH(convertible_to_half / convertible_to_smaller, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeDividedByABiggerDouble) {
+  ASSERT_THAT(DOUBLE(convertible_to_half / 0.6), DoubleEq(0.5/0.6));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeDividedByABiggerConvertibleToDouble) {
+  Number<double> convertible_to_bigger { 0.6 };
+  ASSERT_THAT(DOUBLE(convertible_to_half / convertible_to_bigger),
+              DoubleEq(0.5/0.6));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideASmallerDouble) {
+  ASSERT_THAT(DOUBLE(0.4 / convertible_to_half), DoubleEq(0.4/0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideASmallerConvertibleToDouble) {
+  Number<double> convertible_to_smaller { 0.4 };
+  ASSERT_THAT(DOUBLE(convertible_to_smaller / convertible_to_half),
+              DoubleEq(0.4/0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideABiggerDouble) {
+  ASSERT_DEATH(0.6 / convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideABiggerConvertibleToDouble) {
+  Number<double> convertible_to_bigger { 0.6 };
+  ASSERT_DEATH(convertible_to_bigger / convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeDividedByASmallerProbability) {
+  probability_t probability = 0.4;
+  ASSERT_DEATH(convertible_to_half / probability, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeDividedByASmallerConvertibleToProbability) {
+  Number<probability_t> convertible_to_smaller { 0.4 };
+  ASSERT_DEATH(convertible_to_half / convertible_to_smaller, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeDividedByABiggerProbability) {
+  probability_t probability = 0.6;
+  ASSERT_THAT(DOUBLE(convertible_to_half / probability), DoubleEq(0.5/0.6));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeDividedByABiggerConvertibleToProbability) {
+  Number<probability_t> convertible_to_bigger { 0.6 };
+  ASSERT_THAT(DOUBLE(convertible_to_half / convertible_to_bigger),
+              DoubleEq(0.5/0.6));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideASmallerProbability) {
+  probability_t probability = 0.4;
+  ASSERT_THAT(DOUBLE(probability / convertible_to_half), DoubleEq(0.4/0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanDivideASmallerConvertibleToProbability) {
+  Number<probability_t> convertible_to_smaller { 0.4 };
+  ASSERT_THAT(DOUBLE(convertible_to_smaller / convertible_to_half),
+              DoubleEq(0.4/0.5));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideABiggerProbability) {
+  probability_t probability = 0.6;
+  ASSERT_DEATH(probability / convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+       CanDivideABiggerConvertibleToProbability) {
+  Number<probability_t> convertible_to_bigger { 0.6 };
+  ASSERT_DEATH(convertible_to_bigger / convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeDividedByItself) {
+  ASSERT_THAT(DOUBLE(convertible_to_half / convertible_to_half), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeDividedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_half / convertible_to_itself),
+              DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanDivideAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself / convertible_to_half),
+              DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeRightAddedByADouble) {
+  ASSERT_THAT(DOUBLE(convertible_to_half + 0.25), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeRightAddedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_half + convertible_to_quarter),
+              DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeLeftAddedByADouble) {
+  ASSERT_THAT(DOUBLE(0.25 + convertible_to_half), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeLeftAddedByAConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter + convertible_to_half),
+              DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeRightAddedByAProbability) {
+  probability_t quarter = 0.25;
+  ASSERT_THAT(DOUBLE(convertible_to_half + quarter), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeRightAddedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_half + convertible_to_quarter),
+              DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeLeftAddedByAProbability) {
+  probability_t quarter = 0.25;
+  ASSERT_THAT(DOUBLE(quarter + convertible_to_half), DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeLeftAddedByAConvertibleToProbability) {
+  Number<probability_t> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_quarter + convertible_to_half),
+              DoubleEq(0.75));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeAddedByItself) {
+  ASSERT_THAT(DOUBLE(convertible_to_half + convertible_to_half), DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeRightAddedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_half + convertible_to_itself),
+              DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeLeftAddedByAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself + convertible_to_half),
+              DoubleEq(1.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanSubtractASmallerDouble) {
+  ASSERT_THAT(DOUBLE(convertible_to_half - 0.25), DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanSubtractASmallerConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_THAT(DOUBLE(convertible_to_half - convertible_to_quarter),
+              DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanSubtractABiggerDouble) {
+  ASSERT_DEATH(convertible_to_half - 0.75, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanSubtractABiggerConvertibleToDouble) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_DEATH(convertible_to_half - convertible_to_three_quarters, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeSubtractedFromASmallerDouble) {
+  ASSERT_DEATH(0.25 - convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeSubtractedFromASmallerConvertibleToDouble) {
+  Number<double> convertible_to_quarter { 0.25 };
+  ASSERT_DEATH(convertible_to_quarter - convertible_to_half, "");
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeSubtractedFromABiggerDouble) {
+  ASSERT_THAT(DOUBLE(0.75 - convertible_to_half), DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeSubtractedFromABiggerConvertibleToDouble) {
+  Number<double> convertible_to_three_quarters { 0.75 };
+  ASSERT_THAT(DOUBLE(convertible_to_three_quarters - convertible_to_half),
+              DoubleEq(0.25));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanBeSubtractedByItself) {
+  ASSERT_THAT(DOUBLE(convertible_to_half - convertible_to_half),
+              DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf, CanSubtractAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_half - convertible_to_itself),
+              DoubleEq(0.0));
+}
+
+/*----------------------------------------------------------------------------*/
+
+TEST_F(AConvertibleToProbabilityHalf,
+    CanBeSubtractedFromAConvertibleToItself) {
+  Number<probability_t> convertible_to_itself { convertible_to_half };
+  ASSERT_THAT(DOUBLE(convertible_to_itself - convertible_to_half),
+              DoubleEq(0.0));
+}
 /*----------------------------------------------------------------------------*/
